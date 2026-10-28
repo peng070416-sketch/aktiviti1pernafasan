@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aktiviti 1: Padankan Organ Pernafasan (Sains Tahun 4)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Fredoka & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            skyPastel: '#E0F2FE',
+            mintPastel: '#E6F4EA',
+            pinkPastel: '#FCE7F3',
+            yellowPastel: '#FEF9C3',
+            purplePastel: '#F3E8FF',
+            tealDark: '#005F73',
+            navyDark: '#0A2540'
+          },
+          fontFamily: {
+            fredoka: ['Fredoka', 'cursive', 'sans-serif'],
+            poppins: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 50%, #fef9c3 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-fredoka { font-family: 'Fredoka', cursive, sans-serif; }
+    
+    /* Background Floating Animations */
+    @keyframes floatBubble {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(5deg); }
+    }
+    .animate-float {
+      animation: floatBubble 5s ease-in-out infinite;
+    }
+    .animate-float-delayed {
+      animation: floatBubble 6s ease-in-out 2s infinite;
+    }
+
+    /* Slow Gentle Breathing Animation for Cover Logo */
+    @keyframes gentleBreathing {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    .animate-breathing {
+      animation: gentleBreathing 4s ease-in-out infinite;
+    }
+
+    /* Screen Transition */
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .screen.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Drag & Drop Visual State */
+    .draggable-card {
+      cursor: grab;
+      touch-action: manipulation;
+      transition: all 0.2s ease;
+    }
+    .draggable-card:active {
+      cursor: grabbing;
+    }
+    .draggable-card.selected {
+      box-shadow: 0 0 0 4px #2563eb;
+      transform: scale(1.04);
+      background-color: #dbeafe !important;
+    }
+    .drop-zone {
+      transition: all 0.2s ease;
+    }
+    .drop-zone.hovered {
+      background-color: #fef08a !important;
+      border-color: #ca8a04 !important;
+      transform: scale(1.03);
+    }
+    .drop-zone.filled {
+      border-style: solid;
+      background-color: #ffffff;
+    }
+
+    /* Dual Side Cannon Confetti Styling */
+    .confetti-piece {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.95;
+      will-change: transform, opacity;
+    }
+
+    @keyframes confettiCannonLeft {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6);
+        opacity: 0;
+      }
+    }
+
+    @keyframes confettiCannonRight {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6);
+        opacity: 0;
+      }
+    }
+
+    .animate-confetti-left {
+      animation: confettiCannonLeft 3.2s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+    }
+
+    .animate-confetti-right {
+      animation: confettiCannonRight 3.2s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-float, .animate-float-delayed, .animate-breathing, .animate-bounce {
+        animation: none !important;
+      }
+      .confetti-piece {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased relative pb-10">
+
+  <!-- Container for Pure JS Confetti Cannon Pieces -->
+  <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+  <!-- Background Decorative Animated Elements -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute top-10 left-5 w-16 h-16 bg-blue-200/40 rounded-full blur-xl animate-float"></div>
+    <div class="absolute top-1/3 right-10 w-24 h-24 bg-pink-200/40 rounded-full blur-xl animate-float-delayed"></div>
+    <div class="absolute bottom-10 left-1/4 w-20 h-20 bg-yellow-200/40 rounded-full blur-xl animate-float"></div>
+    <div class="absolute top-8 left-12 text-3xl opacity-20 animate-float">☁️</div>
+    <div class="absolute top-1/4 right-16 text-3xl opacity-20 animate-float-delayed">✨</div>
+    <div class="absolute bottom-20 right-12 text-3xl opacity-20 animate-float">🎈</div>
+  </div>
+
+  <main class="relative z-10 max-w-5xl mx-auto px-4 py-6">
+
+    <!-- ==========================================
+         SKRIN 1: HALAMAN UTAMA (COVER PAGE)
+         ========================================== -->
+    <section id="screen-1" class="screen active">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-xl border border-white/60 text-center relative overflow-hidden">
+        
+        <div class="inline-block px-4 py-1.5 bg-sky-100 text-sky-700 font-bold rounded-full text-sm mb-4 tracking-wide font-fredoka uppercase shadow-sm">
+          Sains Tahun 4 (KSSR Semakan)
+        </div>
+        
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-navyDark font-fredoka leading-tight mb-4">
+          AKTIVITI 1: PADANKAN ORGAN PERNAFASAN 🫁
+        </h1>
+        
+        <p class="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+          Selamat datang, detektif cilik sains! 🔎 Mari kita terokai sistem pernafasan manusia dan kenali organ yang membantu kita bernafas. Padankan setiap organ pada kedudukan yang betul dan kumpulkan markah untuk membuktikan kemahiran sains anda!
+        </p>
+
+        <!-- Premium Central Emblem Logo with Gentle Breathing Animation -->
+        <div class="relative w-56 h-56 sm:w-72 sm:h-72 mx-auto mb-8 animate-breathing">
+          <!-- Outer Soft Glow Rings -->
+          <div class="absolute inset-0 bg-gradient-to-tr from-sky-300/40 via-teal-200/40 to-pink-300/40 rounded-full blur-lg transform scale-105"></div>
+          
+          <!-- Inner Badge Container -->
+          <div class="relative w-full h-full bg-gradient-to-br from-white via-sky-50 to-pink-50 rounded-full p-4 shadow-xl border-4 border-white flex flex-col items-center justify-center text-center">
+            
+            <!-- Cute Anatomical Vector Graphic -->
+            <svg class="w-36 h-36 sm:w-44 sm:h-44 drop-shadow-md" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logoLungGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF7B9C" />
+                  <stop offset="100%" stop-color="#FF4D6D" />
+                </linearGradient>
+                <linearGradient id="logoTracheaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#38BDF8" />
+                  <stop offset="100%" stop-color="#0284C7" />
+                </linearGradient>
+              </defs>
+
+              <circle cx="28" cy="40" r="4" fill="#FBBF24" />
+              <circle cx="175" cy="50" r="3" fill="#38BDF8" />
+              <circle cx="165" cy="150" r="4" fill="#F472B6" />
+              
+              <path d="M100 22 C125 22 135 38 128 50 C122 60 108 62 100 64 L100 95" stroke="url(#logoTracheaGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M100 25 L100 95" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="3 4" stroke-linecap="round"/>
+
+              <rect x="94" y="65" width="12" height="35" rx="6" fill="url(#logoTracheaGrad)" />
+              <line x1="94" y1="72" x2="106" y2="72" stroke="#E0F2FE" stroke-width="2"/>
+              <line x1="94" y1="80" x2="106" y2="80" stroke="#E0F2FE" stroke-width="2"/>
+              <line x1="94" y1="88" x2="106" y2="88" stroke="#E0F2FE" stroke-width="2"/>
+
+              <path d="M100 95 Q82 105 70 120" stroke="#0284C7" stroke-width="7" stroke-linecap="round" fill="none"/>
+              <path d="M100 95 Q118 105 130 120" stroke="#0284C7" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+              <path d="M96 100 C60 100 48 125 50 155 C52 175 75 180 92 172 C98 162 98 125 96 100 Z" fill="url(#logoLungGrad)" stroke="#E11D48" stroke-width="3"/>
+              <path d="M104 100 C140 100 152 125 150 155 C148 175 125 180 108 172 C102 162 102 125 104 100 Z" fill="url(#logoLungGrad)" stroke="#E11D48" stroke-width="3"/>
+
+              <circle cx="72" cy="138" r="2.5" fill="#4C0519"/>
+              <circle cx="84" cy="138" r="2.5" fill="#4C0519"/>
+              <path d="M75 145 Q78 149 81 145" stroke="#4C0519" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <circle cx="116" cy="138" r="2.5" fill="#4C0519"/>
+              <circle cx="128" cy="138" r="2.5" fill="#4C0519"/>
+              <path d="M119 145 Q122 149 125 145" stroke="#4C0519" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <path d="M45 178 Q100 162 155 178 Q100 188 45 178 Z" fill="#10B981" stroke="#047857" stroke-width="2"/>
+            </svg>
+
+            <div class="mt-1 bg-gradient-to-r from-teal-600 to-sky-600 text-white font-fredoka font-semibold text-xs sm:text-sm px-4 py-1 rounded-full shadow-md tracking-wide">
+              Sistem Pernafasan Manusia
+            </div>
+          </div>
+          
+          <div class="absolute -top-2 -right-2 bg-yellow-300 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md rotate-12">
+            Interaktif! ✨
+          </div>
+        </div>
+
+        <button onclick="showScreen(2)" class="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-fredoka text-xl px-10 py-4 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-200">
+          <span>Mula Sekarang</span>
+          <span class="text-2xl">🚀</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 2: VIDEO PEMBELAJARAN
+         ========================================== -->
+    <section id="screen-2" class="screen">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-white/60">
+        
+        <div class="text-center mb-6">
+          <h2 class="text-2xl sm:text-4xl font-bold text-navyDark font-fredoka mb-2">
+            Jom Tonton dan Terokai! 🎬
+          </h2>
+          <p class="text-slate-600">
+            Sebelum memulakan misi, tonton video ini untuk mengetahui lebih lanjut tentang sistem pernafasan manusia.
+          </p>
+        </div>
+
+        <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-md bg-slate-900 mb-6 border-4 border-white">
+          <iframe 
+            class="w-full h-full"
+            src="https://www.youtube.com/embed/9FN_APQmTRk" 
+            title="Video Pembelajaran Sistem Pernafasan Manusia" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <div class="text-center mb-8">
+          <p class="text-xs text-slate-500 mb-2">Video tidak muncul atau bermasalah?</p>
+          <a href="https://youtu.be/9FN_APQmTRk" target="_blank" rel="noopener noreferrer" 
+             class="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-medium px-5 py-2.5 rounded-full shadow transition text-sm">
+            <span>▶ Tonton Video di YouTube</span>
+            <span class="text-xs">↗</span>
+          </a>
+        </div>
+
+        <div class="flex justify-between items-center pt-4 border-t border-slate-200/80">
+          <button onclick="showScreen(1)" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full transition flex items-center gap-2 text-sm">
+            <span>🏠 Halaman Utama</span>
+          </button>
+          <button onclick="showScreen(3)" class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-fredoka text-lg rounded-full shadow-md hover:shadow-lg transition flex items-center gap-2">
+            <span>Seterusnya</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 3: PERNYATAAN HASIL AKTIVITI
+         ========================================== -->
+    <section id="screen-3" class="screen">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-xl border border-white/60">
+        
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-navyDark font-fredoka text-center mb-6 tracking-tight">
+          Pada akhir aktiviti, murid-murid akan dapat
+        </h2>
+
+        <div class="max-w-2xl mx-auto bg-gradient-to-br from-sky-50 to-teal-50 border-2 border-teal-200 rounded-2xl p-6 sm:p-8 shadow-sm text-center mb-8 relative">
+          <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-md mx-auto mb-4 border border-teal-100">
+            🎯
+          </div>
+          <p class="text-lg sm:text-xl font-semibold text-tealDark leading-relaxed">
+            Mengenal pasti sekurang-kurangnya 4 daripada 7 organ yang terlibat dalam sistem pernafasan dengan betul.
+          </p>
+        </div>
+
+        <div class="max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-8">
+          <span class="text-2xl">💡</span>
+          <p class="text-sm text-amber-800 leading-normal">
+            Sediakan ingatan anda! Di skrin seterusnya, anda perlu meletakkan label organ pada kedudukan yang betul pada rajah manusia.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-200/80">
+          <div class="flex gap-2">
+            <button onclick="showScreen(1)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full transition text-sm">
+              🏠 Halaman Utama
+            </button>
+            <button onclick="showScreen(2)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full transition text-sm">
+              Kembali ◀
+            </button>
+          </div>
+          <button onclick="showScreen(4)" class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-fredoka text-lg rounded-full shadow-md hover:shadow-lg transition flex items-center gap-2">
+            <span>Seterusnya (Mula Misi)</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 4: PERMAINAN INTERAKTIF (PADANKAN ORGAN)
+         ========================================== -->
+    <section id="screen-4" class="screen">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-xl border border-white/60">
+        
+        <div class="text-center mb-4">
+          <h2 class="text-2xl sm:text-3xl font-bold text-navyDark font-fredoka">
+            🔎 Misi 1: Padankan Organ Pernafasan
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto mt-1">
+            Seret kad nama organ ke kedudukan yang betul pada rajah sistem pernafasan. Anda juga boleh mengetik kad nama, kemudian mengetik lokasi yang sepadan. Cuba kenal pasti sekurang-kurangnya 4 daripada 7 organ dengan betul untuk membuka misi seterusnya!
+          </p>
+        </div>
+
+        <!-- Upper Results Feedback Panel -->
+        <div id="matching-feedback-top" class="hidden mb-5 p-4 rounded-2xl text-center shadow-md transition border"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Column 1: Organ Cards Palette -->
+          <div class="lg:col-span-4 bg-sky-50/80 rounded-2xl p-4 border border-sky-200 shadow-sm">
+            <h3 class="text-sm font-bold text-sky-900 font-fredoka mb-3 flex items-center justify-between">
+              <span>🏷️ Pilihan Kad Nama Organ:</span>
+              <span class="text-xs font-normal text-slate-500">Ketik/Seret kad</span>
+            </h3>
+            
+            <div id="cards-palette" class="flex flex-wrap lg:flex-col gap-2.5 min-h-[160px]">
+              <!-- Cards dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Column 2: Simplified Text-Book Style Anatomical Diagram with Bold Dark Guide Lines -->
+          <div class="lg:col-span-8 bg-white rounded-2xl p-3 sm:p-5 border border-slate-300 shadow-inner flex flex-col items-center">
+            
+            <div class="relative w-full max-w-[520px] aspect-[4/5] bg-white rounded-2xl overflow-hidden border border-slate-300 shadow-sm">
+              
+              <!-- Clean High-Contrast Textbook Style Anatomical Vector Diagram -->
+              <svg class="w-full h-full absolute inset-0" viewBox="0 0 500 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                
+                <!-- Clean Outline of Body Silhouette -->
+                <!-- Head, Neck, Chest -->
+                <path d="M250 40 C 215 40 190 65 190 100 C 190 120 198 135 208 145 C 205 160 205 180 200 195 C 160 215 130 250 125 300 L 120 540 L 380 540 L 375 300 C 370 250 340 215 300 195 C 295 180 295 160 292 145 C 302 135 310 120 310 100 C 310 65 285 40 250 40 Z" fill="#F8FAFC" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round"/>
+                
+                <!-- Head Detail (Facial Profile Soft Lines) -->
+                <!-- Nose & Mouth opening indicators -->
+                <path d="M 282 95 Q 295 98 288 112 Q 278 118 268 116" fill="none" stroke="#334155" stroke-width="2"/>
+
+                <!-- 1. Mulut / Hidung Pathway -->
+                <path d="M 276 100 L 250 102 L 250 145" stroke="#94A3B8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="278" cy="100" r="4" fill="#0F172A"/>
+
+                <!-- 2. Trakea (Straight Tube with Rings) -->
+                <rect x="241" y="145" width="18" height="90" rx="4" fill="#E2E8F0" stroke="#0F172A" stroke-width="2.5"/>
+                <line x1="242" y1="160" x2="258" y2="160" stroke="#0F172A" stroke-width="2"/>
+                <line x1="242" y1="175" x2="258" y2="175" stroke="#0F172A" stroke-width="2"/>
+                <line x1="242" y1="190" x2="258" y2="190" stroke="#0F172A" stroke-width="2"/>
+                <line x1="242" y1="205" x2="258" y2="205" stroke="#0F172A" stroke-width="2"/>
+                <line x1="242" y1="220" x2="258" y2="220" stroke="#0F172A" stroke-width="2"/>
+
+                <!-- 5. Paru-paru (Soft Pink Lungs Outline) -->
+                <!-- Left Lung -->
+                <path d="M 235 240 C 185 240 160 270 160 350 C 160 410 190 430 235 415 Z" fill="#FFE4E6" stroke="#991B1B" stroke-width="2.5"/>
+                <!-- Right Lung -->
+                <path d="M 265 240 C 315 240 340 270 340 350 C 340 410 310 430 265 415 Z" fill="#FFE4E6" stroke="#991B1B" stroke-width="2.5"/>
+
+                <!-- 3. Bronkus (Main Branches) -->
+                <path d="M 250 235 L 210 275" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M 250 235 L 290 275" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+
+                <!-- 4. Bronkiolus (Sub-branches inside lungs) -->
+                <!-- Left Sub-branches -->
+                <path d="M 210 275 L 185 305 M 210 275 L 195 330 M 210 275 L 225 320" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M 185 305 L 175 325 M 195 330 L 190 355 M 225 320 L 225 350" stroke="#334155" stroke-width="1.8" stroke-linecap="round"/>
+                
+                <!-- Right Sub-branches -->
+                <path d="M 290 275 L 315 305 M 290 275 L 305 330 M 290 275 L 275 320" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M 315 305 L 325 325 M 305 330 L 310 355 M 275 320 L 275 350" stroke="#334155" stroke-width="1.8" stroke-linecap="round"/>
+
+                <!-- 7. Diafragma (Clear Curved Thick Line below lungs) -->
+                <path d="M 150 440 Q 250 400 350 440" stroke="#15803D" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M 150 440 Q 250 400 350 440 L 350 455 Q 250 415 150 455 Z" fill="#DCFCE7" opacity="0.6"/>
+
+                <!-- 6. Alveolus (Inverted Inset Circle) -->
+                <line x1="310" y1="355" x2="410" y2="445" stroke="#475569" stroke-width="2" stroke-dasharray="3 3"/>
+                <circle cx="415" cy="455" r="38" fill="#FFFFFF" stroke="#0F172A" stroke-width="3"/>
+                <!-- Simple cluster of alveoli sacs -->
+                <circle cx="405" cy="445" r="10" fill="#FECDD3" stroke="#991B1B" stroke-width="1.5"/>
+                <circle cx="422" cy="443" r="11" fill="#FECDD3" stroke="#991B1B" stroke-width="1.5"/>
+                <circle cx="410" cy="460" r="11" fill="#FECDD3" stroke="#991B1B" stroke-width="1.5"/>
+                <circle cx="426" cy="462" r="10" fill="#FECDD3" stroke="#991B1B" stroke-width="1.5"/>
+
+                <!-- ==========================================
+                     BOLD DARK GUIDELINE POINTERS TO ORGANS
+                     (Thick Navy #0F172A lines with distinct target dots)
+                     ========================================== -->
+                <!-- 1. Mulut / Hidung -> Drop Zone 1 (Right Top) -->
+                <polyline points="278,100 320,100 320,60 310,60" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="278" cy="100" r="4.5" fill="#0F172A"/>
+
+                <!-- 2. Trakea -> Drop Zone 2 (Left Upper) -->
+                <polyline points="241,180 180,180 180,165 195,165" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="241" cy="180" r="4.5" fill="#0F172A"/>
+
+                <!-- 3. Bronkus -> Drop Zone 3 (Right Middle-Upper) -->
+                <polyline points="280,265 370,265 370,275 310,275" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="280" cy="265" r="4.5" fill="#0F172A"/>
+
+                <!-- 4. Bronkiolus -> Drop Zone 4 (Left Middle) -->
+                <polyline points="190,340 130,340 130,296 195,296" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="190" cy="340" r="4.5" fill="#0F172A"/>
+
+                <!-- 5. Paru-paru -> Drop Zone 5 (Left Lower) -->
+                <polyline points="200,380 120,380 120,380 195,380" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="200" cy="380" r="4.5" fill="#0F172A"/>
+
+                <!-- 6. Alveolus -> Drop Zone 6 (Right Lower) -->
+                <polyline points="415,493 415,396 310,396" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="415" cy="493" r="4.5" fill="#0F172A"/>
+
+                <!-- 7. Diafragma -> Drop Zone 7 (Left Bottom) -->
+                <polyline points="250,422 170,422 170,480 195,480" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="250" cy="422" r="4.5" fill="#0F172A"/>
+              </svg>
+
+              <!-- Interactive Drop Zones Layer -->
+              <!-- 1. Mulut / Hidung Zone -->
+              <div data-organ-id="1" class="drop-zone absolute top-[5.5%] right-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 1</span>
+              </div>
+
+              <!-- 2. Trakea Zone -->
+              <div data-organ-id="2" class="drop-zone absolute top-[23%] left-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 2</span>
+              </div>
+
+              <!-- 3. Bronkus Zone -->
+              <div data-organ-id="3" class="drop-zone absolute top-[41.5%] right-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 3</span>
+              </div>
+
+              <!-- 4. Bronkiolus Zone -->
+              <div data-organ-id="4" class="drop-zone absolute top-[45%] left-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 4</span>
+              </div>
+
+              <!-- 5. Paru-paru Zone -->
+              <div data-organ-id="5" class="drop-zone absolute top-[59%] left-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 5</span>
+              </div>
+
+              <!-- 6. Alveolus Zone -->
+              <div data-organ-id="6" class="drop-zone absolute top-[61.5%] right-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 6</span>
+              </div>
+
+              <!-- 7. Diafragma Zone -->
+              <div data-organ-id="7" class="drop-zone absolute top-[75.5%] left-[2%] w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600">
+                <span class="placeholder-text">Petak 7</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="flex flex-wrap justify-between items-center gap-3 mt-6 pt-4 border-t border-slate-200">
+          <div class="flex flex-wrap gap-2">
+            <button onclick="showScreen(1)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs sm:text-sm">
+              🏠 Halaman Utama
+            </button>
+            <button onclick="resetMatchingGame()" class="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-full text-xs sm:text-sm transition flex items-center gap-1">
+              <span>Cuba Lagi</span>
+              <span>🔄</span>
+            </button>
+            <button onclick="showMatchingAnswers()" class="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-full text-xs sm:text-sm transition flex items-center gap-1">
+              <span>Lihat Jawapan Betul</span>
+              <span>💡</span>
+            </button>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="checkMatchingAnswers()" class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-fredoka text-base rounded-full shadow-md transition flex items-center gap-1">
+              <span>Semak Jawapan</span>
+              <span>✨</span>
+            </button>
+            
+            <button id="btn-next-screen4" onclick="showScreen(5)" class="hidden px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-fredoka text-base rounded-full shadow-md transition items-center gap-1 animate-bounce">
+              <span>Seterusnya</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Lower Results Feedback Panel -->
+        <div id="matching-feedback-bottom" class="hidden mt-6 p-4 rounded-2xl text-center shadow-md transition border"></div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 5: FUNGSI ORGAN PERNAFASAN
+         ========================================== -->
+    <section id="screen-5" class="screen">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-white/60">
+        
+        <div class="text-center mb-8">
+          <h2 class="text-2xl sm:text-4xl font-bold text-navyDark font-fredoka mb-2">
+            🫁 Kenali Fungsi Organ Pernafasan
+          </h2>
+          <p class="text-slate-600 max-w-2xl mx-auto">
+            Setiap organ dalam sistem pernafasan mempunyai fungsi yang penting. Mari kenali bagaimana organ-organ ini bekerjasama untuk membantu kita bernafas.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+          
+          <div class="bg-gradient-to-br from-blue-50 to-sky-50 p-5 rounded-2xl border border-sky-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">👃</div>
+            <h3 class="text-lg font-bold text-sky-900 font-fredoka mb-2">1. Mulut / Hidung</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Laluan udara masuk dan keluar daripada sistem pernafasan. Hidung menapis habuk & melembapkan udara yang disedut.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-teal-50 to-emerald-50 p-5 rounded-2xl border border-teal-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">🌬️</div>
+            <h3 class="text-lg font-bold text-teal-900 font-fredoka mb-2">2. Trakea</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Saluran pernafasan utama menyalurkan udara dari tekak ke bronkus dan membenarkan udara keluar semasa menghembus nafas.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-green-50 to-lime-50 p-5 rounded-2xl border border-green-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">🌿</div>
+            <h3 class="text-lg font-bold text-green-900 font-fredoka mb-2">3. Bronkus</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Dua cabang utama saluran udara membawa udara ke peparu kanan dan kiri.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">🔬</div>
+            <h3 class="text-lg font-bold text-purple-900 font-fredoka mb-2">4. Bronkiolus</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Cabang saluran udara yang lebih kecil daripada bronkus ke alveolus.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-rose-50 to-pink-50 p-5 rounded-2xl border border-rose-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">🫁</div>
+            <h3 class="text-lg font-bold text-rose-900 font-fredoka mb-2">5. Paru-paru</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Organ utama sistem pernafasan yang mengandungi salur udara & alveolus untuk pertukaran gas.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-cyan-50 to-sky-50 p-5 rounded-2xl border border-cyan-200 shadow-sm hover:shadow-md transition">
+            <div class="text-3xl mb-2">🫧</div>
+            <h3 class="text-lg font-bold text-cyan-900 font-fredoka mb-2">6. Alveolus</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Kantung udara kecil tempat pertukaran gas oksigen & karbon dioksida berlaku.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-5 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md transition md:col-span-2 lg:col-span-1">
+            <div class="text-3xl mb-2">💨</div>
+            <h3 class="text-lg font-bold text-amber-900 font-fredoka mb-2">7. Diafragma</h3>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Otot di bawah peparu yang mengecut (bergerak ke bawah) semasa menarik nafas & mengendur (bergerak ke atas) semasa menghembus nafas.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-200">
+          <div class="flex gap-2">
+            <button onclick="showScreen(1)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full transition text-sm">
+              🏠 Halaman Utama
+            </button>
+            <button onclick="showScreen(4)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full transition text-sm">
+              Kembali ◀
+            </button>
+          </div>
+          <button onclick="showScreen(6)" class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-fredoka text-lg rounded-full shadow-md hover:shadow-lg transition flex items-center gap-2">
+            <span>Seterusnya</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 6: KUIZ INTERAKTIF FUNGSI ORGAN
+         ========================================== -->
+    <section id="screen-6" class="screen">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-white/60 max-w-3xl mx-auto">
+        
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-navyDark font-fredoka">
+              📝 Kuiz Fungsi Organ
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500">Pilih satu jawapan yang betul bagi setiap soalan.</p>
+          </div>
+          <div class="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-fredoka font-bold text-sm">
+            <span id="quiz-progress-text">Soalan 1 daripada 3</span>
+          </div>
+        </div>
+
+        <div id="quiz-container">
+
+          <div id="quiz-q1" class="quiz-question-block">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 font-fredoka">
+              1. Apakah fungsi utama trakea dalam sistem pernafasan manusia?
+            </h3>
+            <div class="space-y-3 mb-6">
+              <label onclick="selectQuizOption(1, 'A')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                A. Mengepam darah ke seluruh badan.
+              </label>
+              <label onclick="selectQuizOption(1, 'B')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                B. Menyalurkan udara antara bahagian tekak dengan bronkus.
+              </label>
+              <label onclick="selectQuizOption(1, 'C')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                C. Menyerap nutrien daripada makanan.
+              </label>
+              <label onclick="selectQuizOption(1, 'D')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                D. Menjadi tempat utama pertukaran oksigen dan karbon dioksida.
+              </label>
+            </div>
+          </div>
+
+          <div id="quiz-q2" class="quiz-question-block hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 font-fredoka">
+              2. Di manakah pertukaran gas oksigen dan karbon dioksida berlaku?
+            </h3>
+            <div class="space-y-3 mb-6">
+              <label onclick="selectQuizOption(2, 'A')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                A. Diafragma.
+              </label>
+              <label onclick="selectQuizOption(2, 'B')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                B. Trakea.
+              </label>
+              <label onclick="selectQuizOption(2, 'C')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                C. Alveolus.
+              </label>
+              <label onclick="selectQuizOption(2, 'D')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                D. Bronkus.
+              </label>
+            </div>
+          </div>
+
+          <div id="quiz-q3" class="quiz-question-block hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 font-fredoka">
+              3. Apakah yang dilakukan oleh diafragma semasa kita menarik nafas?
+            </h3>
+            <div class="space-y-3 mb-6">
+              <label onclick="selectQuizOption(3, 'A')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                A. Diafragma mengecut dan bergerak ke bawah.
+              </label>
+              <label onclick="selectQuizOption(3, 'B')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                B. Diafragma mengendur dan melengkung ke atas.
+              </label>
+              <label onclick="selectQuizOption(3, 'C')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                C. Diafragma menapis habuk daripada udara.
+              </label>
+              <label onclick="selectQuizOption(3, 'D')" class="quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm">
+                D. Diafragma menyalurkan udara ke bronkus.
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="quiz-feedback" class="hidden mb-6 p-4 rounded-xl text-sm leading-relaxed font-medium shadow-inner"></div>
+
+        <div class="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-200">
+          <div class="flex gap-2">
+            <button onclick="showScreen(1)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs sm:text-sm">
+              🏠 Utama
+            </button>
+            <button onclick="showScreen(5)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs sm:text-sm">
+              Kembali ◀
+            </button>
+          </div>
+
+          <div class="flex gap-2">
+            <button id="btn-quiz-check" onclick="checkQuizAnswer()" class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-fredoka rounded-full shadow transition text-sm">
+              Semak Jawapan ✨
+            </button>
+
+            <button id="btn-quiz-next" onclick="nextQuizQuestion()" class="hidden px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-fredoka rounded-full shadow transition text-sm">
+              Soalan Seterusnya ➔
+            </button>
+
+            <button id="btn-quiz-finish" onclick="showScreen(7)" class="hidden px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-fredoka rounded-full shadow transition text-sm">
+              Lihat Keputusan ➔
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SKRIN 7: KEPUTUSAN DAN RUMUSAN
+         ========================================== -->
+    <section id="screen-7" class="screen">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-xl border border-white/60 text-center max-w-3xl mx-auto">
+        
+        <div class="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-4xl shadow-md mx-auto mb-4 border-2 border-yellow-300 animate-bounce">
+          🏆
+        </div>
+
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-navyDark font-fredoka mb-2">
+          Tahniah, Detektif Cilik!
+        </h2>
+        <p class="text-slate-600 text-sm sm:text-base mb-8">
+          Anda telah melepasi semua misi pembelajaran Sistem Pernafasan Manusia.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          
+          <div class="bg-sky-50 border border-sky-200 p-4 rounded-2xl">
+            <span class="text-xs font-bold text-sky-700 uppercase tracking-wider block mb-1">Padankan Organ</span>
+            <span id="final-score-matching" class="text-3xl font-extrabold text-sky-900 font-fredoka">0/7</span>
+            <span id="final-matching-status" class="text-xs font-semibold block mt-1 text-slate-500">Status</span>
+          </div>
+
+          <div class="bg-purple-50 border border-purple-200 p-4 rounded-2xl">
+            <span class="text-xs font-bold text-purple-700 uppercase tracking-wider block mb-1">Kuiz Fungsi</span>
+            <span id="final-score-quiz" class="text-3xl font-extrabold text-purple-900 font-fredoka">0/3</span>
+            <span class="text-xs text-purple-600 block mt-1">3 Soalan</span>
+          </div>
+
+          <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
+            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">Jumlah Markah</span>
+            <span id="final-score-total" class="text-3xl font-extrabold text-emerald-900 font-fredoka">0/10</span>
+            <span class="text-xs text-emerald-600 block mt-1">Keseluruhan</span>
+          </div>
+
+        </div>
+
+        <div id="final-performance-feedback" class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-base mb-8">
+          -
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-left mb-8">
+          <h3 class="font-bold text-slate-800 font-fredoka mb-3 text-base flex items-center gap-2">
+            <span>📌 Rumusan Pembelajaran Anda:</span>
+          </h3>
+          <ul class="space-y-2 text-xs sm:text-sm text-slate-600">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-500 font-bold">✓</span>
+              <span>Mengenal pasti 7 organ utama sistem pernafasan manusia.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-500 font-bold">✓</span>
+              <span>Memadankan organ pada kedudukan tepat mengikut anatomi manusia.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-500 font-bold">✓</span>
+              <span>Memahami peranan khas alveolus (pertukaran gas) dan diafragma (otot pernafasan).</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-4">
+          <button onclick="resetAllGame()" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-fredoka text-lg rounded-full shadow-md transition flex items-center gap-2">
+            <span>🔄 Cuba Lagi</span>
+          </button>
+
+          <button onclick="showScreen(1)" class="px-8 py-3.5 bg-slate-700 hover:bg-slate-800 text-white font-fredoka text-lg rounded-full shadow-md transition flex items-center gap-2">
+            <span>🏠 Halaman Utama</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Message Modal Box -->
+  <div id="message-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center transform transition-all">
+      <div class="text-4xl mb-3">⚠️</div>
+      <h3 id="modal-title" class="text-lg font-bold font-fredoka text-slate-800 mb-2">Peringatan</h3>
+      <p id="modal-text" class="text-sm text-slate-600 mb-6">Sila pilih satu jawapan sebelum meneruskan!</p>
+      <button onclick="closeModal()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm transition">
+        Faham
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT GAME LOGIC -->
+  <script>
+    const organData = [
+      { id: 1, name: "Mulut / Hidung" },
+      { id: 2, name: "Trakea" },
+      { id: 3, name: "Bronkus" },
+      { id: 4, name: "Bronkiolus" },
+      { id: 5, name: "Paru-paru" },
+      { id: 6, name: "Alveolus" },
+      { id: 7, name: "Diafragma" }
+    ];
+
+    const quizData = [
+      {
+        id: 1,
+        correct: 'B',
+        explain: "Trakea ialah saluran pernafasan utama yang menyalurkan udara antara bahagian tekak dengan bronkus."
+      },
+      {
+        id: 2,
+        correct: 'C',
+        explain: "Alveolus ialah kantung udara kecil di dalam peparu yang menjadi tempat pertukaran gas oksigen dan karbon dioksida."
+      },
+      {
+        id: 3,
+        correct: 'A',
+        explain: "Semasa menarik nafas, diafragma mengecut dan bergerak ke bawah untuk membenarkan isi padu rongga dada bertambah."
+      }
+    ];
+
+    let currentScreen = 1;
+    let selectedCardId = null;
+    let matchingUserAnswers = {};
+    let matchingScore = 0;
+    let matchingChecked = false;
+    let confettiFiredForAttempt = false;
+
+    let quizCurrentIdx = 1;
+    let quizUserAnswers = {};
+    let quizCheckedStatus = { 1: false, 2: false, 3: false };
+    let quizScore = 0;
+
+    function showScreen(screenNum) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(`screen-${screenNum}`);
+      if (target) {
+        target.classList.add('active');
+        currentScreen = screenNum;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      if (screenNum === 7) {
+        updateFinalSummary();
+      }
+    }
+
+    function showCustomModal(title, text) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-text').innerText = text;
+      document.getElementById('message-modal').classList.remove('hidden');
+    }
+    function closeModal() {
+      document.getElementById('message-modal').classList.add('hidden');
+    }
+
+    function initMatchingCards() {
+      const palette = document.getElementById('cards-palette');
+      palette.innerHTML = '';
+
+      const shuffled = [...organData].sort(() => Math.random() - 0.5);
+
+      shuffled.forEach(organ => {
+        const card = document.createElement('div');
+        card.id = `card-organ-${organ.id}`;
+        card.dataset.organId = organ.id;
+        card.draggable = true;
+        card.className = "draggable-card bg-white border-2 border-sky-300 text-sky-900 font-bold px-3 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center justify-between select-none hover:border-sky-500";
+        
+        card.innerHTML = `
+          <span>${organ.name}</span>
+          <span class="text-sky-400 text-xs">⠿</span>
+        `;
+
+        card.addEventListener('click', () => handleCardTap(organ.id));
+
+        card.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', organ.id);
+          highlightCardSelection(organ.id);
+        });
+
+        palette.appendChild(card);
+      });
+
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        const zoneId = parseInt(zone.dataset.organId);
+
+        zone.addEventListener('click', () => handleZoneTap(zoneId));
+
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('hovered');
+        });
+
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('hovered');
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('hovered');
+          const organId = parseInt(e.dataTransfer.getData('text/plain'));
+          if (organId) {
+            assignCardToZone(organId, zoneId);
+          }
+        });
+      });
+    }
+
+    function highlightCardSelection(organId) {
+      selectedCardId = organId;
+      document.querySelectorAll('.draggable-card').forEach(c => {
+        if (parseInt(c.dataset.organId) === organId) {
+          c.classList.add('selected');
+        } else {
+          c.classList.remove('selected');
+        }
+      });
+    }
+
+    function clearCardSelection() {
+      selectedCardId = null;
+      document.querySelectorAll('.draggable-card').forEach(c => c.classList.remove('selected'));
+    }
+
+    function handleCardTap(organId) {
+      if (selectedCardId === organId) {
+        clearCardSelection();
+      } else {
+        highlightCardSelection(organId);
+      }
+    }
+
+    function handleZoneTap(zoneId) {
+      if (selectedCardId !== null) {
+        assignCardToZone(selectedCardId, zoneId);
+        clearCardSelection();
+      } else if (matchingUserAnswers[zoneId]) {
+        returnCardToPalette(matchingUserAnswers[zoneId]);
+      }
+    }
+
+    function assignCardToZone(organId, zoneId) {
+      Object.keys(matchingUserAnswers).forEach(zId => {
+        if (matchingUserAnswers[zId] === organId) {
+          delete matchingUserAnswers[zId];
+          resetZoneVisual(parseInt(zId));
+        }
+      });
+
+      matchingUserAnswers[zoneId] = organId;
+
+      const zone = document.querySelector(`.drop-zone[data-organ-id="${zoneId}"]`);
+      const organObj = organData.find(o => o.id === organId);
+      
+      zone.classList.add('filled');
+      zone.innerHTML = `
+        <div class="flex items-center justify-between w-full px-2 py-1 bg-sky-100 text-sky-900 font-bold rounded-lg text-xs">
+          <span class="truncate">${organObj.name}</span>
+          <button onclick="event.stopPropagation(); returnCardToPalette(${organId})" class="text-red-500 font-bold ml-1 hover:text-red-700">✕</button>
+        </div>
+      `;
+
+      const cardEl = document.getElementById(`card-organ-${organId}`);
+      if (cardEl) cardEl.classList.add('hidden');
+
+      if (matchingChecked) {
+        hideMatchingFeedback();
+      }
+    }
+
+    function returnCardToPalette(organId) {
+      Object.keys(matchingUserAnswers).forEach(zId => {
+        if (matchingUserAnswers[zId] === organId) {
+          delete matchingUserAnswers[zId];
+          resetZoneVisual(parseInt(zId));
+        }
+      });
+
+      const cardEl = document.getElementById(`card-organ-${organId}`);
+      if (cardEl) cardEl.classList.remove('hidden');
+
+      clearCardSelection();
+      if (matchingChecked) {
+        hideMatchingFeedback();
+      }
+    }
+
+    function resetZoneVisual(zoneId) {
+      const zone = document.querySelector(`.drop-zone[data-organ-id="${zoneId}"]`);
+      zone.classList.remove('filled', 'border-emerald-500', 'border-red-500', 'bg-emerald-50', 'bg-red-50');
+      zone.className = "drop-zone absolute w-[38%] h-[8.5%] border-2 border-dashed border-slate-400 bg-white/95 rounded-xl flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:border-blue-600";
+      
+      // Maintain proper positioning per zone
+      const topPositions = {
+        1: "top-[5.5%] right-[2%]",
+        2: "top-[23%] left-[2%]",
+        3: "top-[41.5%] right-[2%]",
+        4: "top-[45%] left-[2%]",
+        5: "top-[59%] left-[2%]",
+        6: "top-[61.5%] right-[2%]",
+        7: "top-[75.5%] left-[2%]"
+      };
+      
+      zone.className += ` ${topPositions[zoneId]}`;
+      zone.innerHTML = `<span class="placeholder-text">Petak ${zoneId}</span>`;
+    }
+
+    function renderDualFeedbackPanels(scoreCount) {
+      const topPanel = document.getElementById('matching-feedback-top');
+      const bottomPanel = document.getElementById('matching-feedback-bottom');
+      const btnNext = document.getElementById('btn-next-screen4');
+
+      let htmlContent = '';
+      let bgClasses = '';
+
+      if (scoreCount === 7) {
+        bgClasses = 'bg-emerald-100 border-emerald-300 text-emerald-900';
+        htmlContent = `
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span class="text-2xl">🎉</span>
+            <div>
+              <p class="font-extrabold text-base sm:text-lg">🎉 TAHNIAH! ANDA BERJAYA MEMADANKAN SEMUA 7 ORGAN DENGAN BETUL! 🏆</p>
+              <p class="text-xs sm:text-sm font-semibold">Markah: <b>7/7</b> (7 Padanan Betul) • Status: <b>SEMPURNA!</b></p>
+            </div>
+          </div>
+        `;
+      } else if (scoreCount >= 4) {
+        bgClasses = 'bg-sky-100 border-sky-300 text-sky-900';
+        htmlContent = `
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span class="text-xl">👍</span>
+            <div>
+              <p class="font-bold text-base">Syabas! Markah anda: <b>${scoreCount}/7</b> (${scoreCount} Padanan Betul)</p>
+              <p class="text-xs sm:text-sm">Anda telah mencapai sasaran minimum (≥4/7)! Boleh tekan 'Seterusnya' atau baiki jawapan untuk markah penuh (7/7).</p>
+            </div>
+          </div>
+        `;
+      } else {
+        bgClasses = 'bg-amber-100 border-amber-300 text-amber-900';
+        htmlContent = `
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span class="text-xl">💪</span>
+            <div>
+              <p class="font-bold text-base">Cuba Lagi! Markah anda: <b>${scoreCount}/7</b> (${scoreCount} Padanan Betul)</p>
+              <p class="text-xs sm:text-sm">Padankan sekurang-kurangnya 4 organ dengan betul untuk membuka misi seterusnya.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      [topPanel, bottomPanel].forEach(panel => {
+        panel.className = `p-4 rounded-2xl text-center shadow-md transition border ${bgClasses}`;
+        panel.innerHTML = htmlContent;
+        panel.classList.remove('hidden');
+      });
+
+      if (scoreCount >= 4) {
+        btnNext.classList.remove('hidden');
+        btnNext.classList.add('inline-flex');
+      } else {
+        btnNext.classList.add('hidden');
+        btnNext.classList.remove('inline-flex');
+      }
+    }
+
+    function checkMatchingAnswers() {
+      let correctCount = 0;
+      
+      organData.forEach(organ => {
+        const zoneId = organ.id;
+        const placedOrganId = matchingUserAnswers[zoneId];
+        const zone = document.querySelector(`.drop-zone[data-organ-id="${zoneId}"]`);
+
+        if (placedOrganId === organ.id) {
+          correctCount++;
+          if (zone) {
+            zone.classList.remove('border-red-500', 'bg-red-50');
+            zone.classList.add('border-emerald-500', 'bg-emerald-50');
+          }
+        } else if (placedOrganId !== undefined) {
+          if (zone) {
+            zone.classList.remove('border-emerald-500', 'bg-emerald-50');
+            zone.classList.add('border-red-500', 'bg-red-50');
+          }
+        }
+      });
+
+      matchingScore = correctCount;
+      matchingChecked = true;
+
+      renderDualFeedbackPanels(correctCount);
+
+      if (correctCount === 7 && !confettiFiredForAttempt) {
+        triggerDualSideCannonConfetti();
+        confettiFiredForAttempt = true;
+      }
+    }
+
+    function hideMatchingFeedback() {
+      matchingChecked = false;
+      document.getElementById('matching-feedback-top').classList.add('hidden');
+      document.getElementById('matching-feedback-bottom').classList.add('hidden');
+    }
+
+    function showMatchingAnswers() {
+      organData.forEach(organ => {
+        assignCardToZone(organ.id, organ.id);
+      });
+      checkMatchingAnswers();
+    }
+
+    function resetMatchingGame() {
+      matchingUserAnswers = {};
+      matchingScore = 0;
+      matchingChecked = false;
+      confettiFiredForAttempt = false;
+      selectedCardId = null;
+
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        resetZoneVisual(parseInt(zone.dataset.organId));
+      });
+
+      document.querySelectorAll('.draggable-card').forEach(card => {
+        card.classList.remove('hidden', 'selected');
+      });
+
+      hideMatchingFeedback();
+
+      const btnNext = document.getElementById('btn-next-screen4');
+      btnNext.classList.add('hidden');
+      btnNext.classList.remove('inline-flex');
+    }
+
+    function triggerDualSideCannonConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.innerHTML = '';
+
+      const colors = ['#38BDF8', '#FBBF24', '#F472B6', '#34D399', '#A78BFA', '#FB923C', '#E11D48'];
+      const piecesPerSide = 45;
+
+      for (let i = 0; i < piecesPerSide; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-piece animate-confetti-left';
+        
+        const sizeW = 8 + Math.random() * 8;
+        const sizeH = 10 + Math.random() * 10;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        const dx = (25 + Math.random() * 40) + 'vw';
+        const dy = (-40 - Math.random() * 45) + 'vh';
+        const rot = (360 + Math.random() * 720) + 'deg';
+        const delay = Math.random() * 0.3;
+        const duration = 2.4 + Math.random() * 0.8;
+
+        confetti.style.left = '0px';
+        confetti.style.bottom = '10px';
+        confetti.style.width = `${sizeW}px`;
+        confetti.style.height = `${sizeH}px`;
+        confetti.style.backgroundColor = color;
+        confetti.style.borderRadius = Math.random() > 0.4 ? '3px' : '50%';
+        confetti.style.setProperty('--dx', dx);
+        confetti.style.setProperty('--dy', dy);
+        confetti.style.setProperty('--rot', rot);
+        confetti.style.animationDelay = `${delay}s`;
+        confetti.style.animationDuration = `${duration}s`;
+
+        container.appendChild(confetti);
+      }
+
+      for (let i = 0; i < piecesPerSide; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-piece animate-confetti-right';
+        
+        const sizeW = 8 + Math.random() * 8;
+        const sizeH = 10 + Math.random() * 10;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        const dx = (-25 - Math.random() * 40) + 'vw';
+        const dy = (-40 - Math.random() * 45) + 'vh';
+        const rot = (-360 - Math.random() * 720) + 'deg';
+        const delay = Math.random() * 0.3;
+        const duration = 2.4 + Math.random() * 0.8;
+
+        confetti.style.right = '0px';
+        confetti.style.bottom = '10px';
+        confetti.style.width = `${sizeW}px`;
+        confetti.style.height = `${sizeH}px`;
+        confetti.style.backgroundColor = color;
+        confetti.style.borderRadius = Math.random() > 0.4 ? '3px' : '50%';
+        confetti.style.setProperty('--dx', dx);
+        confetti.style.setProperty('--dy', dy);
+        confetti.style.setProperty('--rot', rot);
+        confetti.style.animationDelay = `${delay}s`;
+        confetti.style.animationDuration = `${duration}s`;
+
+        container.appendChild(confetti);
+      }
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 4200);
+    }
+
+    function selectQuizOption(qNum, optChar) {
+      if (quizCheckedStatus[qNum]) return;
+
+      quizUserAnswers[qNum] = optChar;
+
+      const qBlock = document.getElementById(`quiz-q${qNum}`);
+      const labels = qBlock.querySelectorAll('.quiz-opt-btn');
+
+      labels.forEach(lbl => {
+        const txt = lbl.innerText.trim();
+        if (txt.startsWith(optChar)) {
+          lbl.classList.add('border-sky-500', 'bg-sky-50', 'text-sky-900', 'font-bold');
+        } else {
+          lbl.classList.remove('border-sky-500', 'bg-sky-50', 'text-sky-900', 'font-bold');
+        }
+      });
+    }
+
+    function checkQuizAnswer() {
+      const qNum = quizCurrentIdx;
+      const userAns = quizUserAnswers[qNum];
+      const feedbackBox = document.getElementById('quiz-feedback');
+      const qData = quizData.find(q => q.id === qNum);
+
+      if (!userAns) {
+        showCustomModal("Perhatian", "Sila pilih satu jawapan sebelum menyemak!");
+        return;
+      }
+
+      quizCheckedStatus[qNum] = true;
+      feedbackBox.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-rose-100', 'text-rose-900');
+
+      const qBlock = document.getElementById(`quiz-q${qNum}`);
+      const labels = qBlock.querySelectorAll('.quiz-opt-btn');
+
+      labels.forEach(lbl => {
+        const txt = lbl.innerText.trim();
+        if (txt.startsWith(qData.correct)) {
+          lbl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+        } else if (txt.startsWith(userAns) && userAns !== qData.correct) {
+          lbl.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900');
+        }
+      });
+
+      if (userAns === qData.correct) {
+        feedbackBox.classList.add('bg-emerald-100', 'text-emerald-900');
+        feedbackBox.innerHTML = `✅ <b>Tahniah, jawapan betul!</b><br>${qData.explain}`;
+      } else {
+        feedbackBox.classList.add('bg-rose-100', 'text-rose-900');
+        feedbackBox.innerHTML = `❌ <b>Jawapan kurang tepat.</b><br>${qData.explain}`;
+      }
+
+      document.getElementById('btn-quiz-check').classList.add('hidden');
+      if (qNum < 3) {
+        document.getElementById('btn-quiz-next').classList.remove('hidden');
+      } else {
+        document.getElementById('btn-quiz-finish').classList.remove('hidden');
+      }
+
+      calculateQuizScore();
+    }
+
+    function calculateQuizScore() {
+      let score = 0;
+      quizData.forEach(q => {
+        if (quizUserAnswers[q.id] === q.correct) {
+          score++;
+        }
+      });
+      quizScore = score;
+    }
+
+    function nextQuizQuestion() {
+      if (quizCurrentIdx < 3) {
+        document.getElementById(`quiz-q${quizCurrentIdx}`).classList.add('hidden');
+        quizCurrentIdx++;
+        document.getElementById(`quiz-q${quizCurrentIdx}`).classList.remove('hidden');
+        
+        document.getElementById('quiz-progress-text').innerText = `Soalan ${quizCurrentIdx} daripada 3`;
+        document.getElementById('quiz-feedback').classList.add('hidden');
+        
+        document.getElementById('btn-quiz-check').classList.remove('hidden');
+        document.getElementById('btn-quiz-next').classList.add('hidden');
+      }
+    }
+
+    function resetQuiz() {
+      quizCurrentIdx = 1;
+      quizUserAnswers = {};
+      quizCheckedStatus = { 1: false, 2: false, 3: false };
+      quizScore = 0;
+
+      for (let i = 1; i <= 3; i++) {
+        const qBlock = document.getElementById(`quiz-q${i}`);
+        if (qBlock) {
+          if (i === 1) qBlock.classList.remove('hidden');
+          else qBlock.classList.add('hidden');
+
+          const labels = qBlock.querySelectorAll('.quiz-opt-btn');
+          labels.forEach(lbl => {
+            lbl.className = "quiz-opt-btn block p-4 rounded-xl border-2 border-slate-200 hover:border-sky-400 cursor-pointer transition font-medium text-sm";
+          });
+        }
+      }
+
+      document.getElementById('quiz-progress-text').innerText = `Soalan 1 daripada 3`;
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('btn-quiz-check').classList.remove('hidden');
+      document.getElementById('btn-quiz-next').classList.add('hidden');
+      document.getElementById('btn-quiz-finish').classList.add('hidden');
+    }
+
+    function updateFinalSummary() {
+      calculateQuizScore();
+
+      document.getElementById('final-score-matching').innerText = `${matchingScore}/7`;
+      document.getElementById('final-score-quiz').innerText = `${quizScore}/3`;
+      
+      const totalScore = matchingScore + quizScore;
+      document.getElementById('final-score-total').innerText = `${totalScore}/10`;
+
+      const matchingStatusEl = document.getElementById('final-matching-status');
+      if (matchingScore >= 4) {
+        matchingStatusEl.innerText = "✓ Mencapai Sasaran";
+        matchingStatusEl.className = "text-xs font-semibold block mt-1 text-emerald-600";
+      } else {
+        matchingStatusEl.innerText = "✗ Belum Mencapai";
+        matchingStatusEl.className = "text-xs font-semibold block mt-1 text-rose-500";
+      }
+
+      const feedbackEl = document.getElementById('final-performance-feedback');
+      if (totalScore >= 9) {
+        feedbackEl.innerText = "🌟 Cemerlang! Anda sangat mahir mengenal organ pernafasan dan memahami fungsinya!";
+      } else if (totalScore >= 7) {
+        feedbackEl.innerText = "👏 Bagus sekali! Anda menunjukkan pemahaman yang baik tentang sistem pernafasan.";
+      } else if (totalScore >= 5) {
+        feedbackEl.innerText = "👍 Usaha yang baik! Teruskan mengulang kaji fungsi organ pernafasan.";
+      } else {
+        feedbackEl.innerText = "💪 Jangan putus asa! Cuba semula dan pelajari fungsi setiap organ dengan lebih teliti.";
+      }
+    }
+
+    function resetAllGame() {
+      resetMatchingGame();
+      resetQuiz();
+      showScreen(1);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMatchingCards();
+    });
+  </script>
+
+</body>
+</html>
